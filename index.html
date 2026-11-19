@@ -11,24 +11,25 @@
 <meta name="theme-color" content="#FAFAF8">
 <meta name="robots" content="noindex, nofollow">
 
-<!-- ⬇️ 1/2 : remplace ID_DE_TON_ICONE par l'ID Drive de ton icône (2 fois) -->
-<link rel="apple-touch-icon" href="apple-touch-icon.png">
-<link rel="icon" type="image/png" href="apple-touch-icon.png">
+<!-- Icône : apple-touch-icon.png à côté de index.html. Quand tu changes l'image, passe ?v=2 à ?v=3, etc. -->
+<link rel="apple-touch-icon" href="apple-touch-icon.png?v=2">
+<link rel="icon" type="image/png" href="apple-touch-icon.png?v=2">
 <!-- ⚠️ Pas de manifest : sinon l'iPhone pourrait oublier le ?id= du client -->
 
 <style>
   html, body { margin: 0; height: 100%; background: #FAFAF8; overflow: hidden; }
-  #splash { position: fixed; inset: 0; display: flex; align-items: center; justify-content: center; }
+  /* Le logo et l'appli occupent exactement la même zone → le D ne bouge pas au moment du passage */
+  #splash, #app { position: fixed; left: 0; right: 0; top: env(safe-area-inset-top); bottom: env(safe-area-inset-bottom); }
+  #splash { display: flex; align-items: center; justify-content: center; }
   #splash svg { width: 92px; height: auto; animation: pulse 1.4s ease-in-out infinite; }
   @keyframes pulse { 50% { opacity: .4; } }
-  #app { position: fixed; left: 0; right: 0; top: env(safe-area-inset-top); bottom: env(safe-area-inset-bottom); }
-  #app iframe { display: block; width: 100%; height: 100%; border: 0; opacity: 0; transition: opacity .3s; }
-  #app iframe.on { opacity: 1; }
+  #app iframe { display: block; width: 100%; height: 100%; border: 0; opacity: 0; pointer-events: none; transition: opacity .3s; }
+  #app iframe.on { opacity: 1; pointer-events: auto; }
   #msg { position: fixed; inset: auto 24px 40% 24px; text-align: center; font: 15px/1.4 -apple-system, sans-serif; color: #14101F; }
 </style>
 </head>
 <body>
-  <div id="splash" aria-hidden="true">
+  <div id="splash" aria-label="Chargement">
     <svg viewBox="0 0 345 278" xmlns="http://www.w3.org/2000/svg">
       <g fill="#14101F">
         <path d="M84.46 19.20L122.20 19.20C129.22 19.20 134.38 25.80 132.68 32.61L78.22 251.01C77.02 255.82 72.70 259.20 67.74 259.20L30.00 259.20C22.98 259.20 17.83 252.60 19.53 245.79L73.98 27.39C75.18 22.58 79.50 19.20 84.46 19.20Z"/>
@@ -40,17 +41,28 @@
   <div id="app"><iframe id="frame" title="DISCIPLINE"></iframe></div>
 
 <script>
-  // ⬇️ 2/2 : colle l'URL de ton appli (Déployer › Gérer les déploiements), celle qui se termine par /exec
+  // URL de ton appli (Déployer › Gérer les déploiements), celle qui se termine par /exec
   const APP_URL = 'https://script.google.com/macros/s/AKfycbxFGUHcynZ36yEAZQ0z4AAqPUhSk5HnltCwYOIVW_0CWoc2SDQP8tAC9jqGCXQqoJKjVw/exec';
 
   const frame = document.getElementById('frame');
+  const splash = document.getElementById('splash');
+  let shown = false;
+  function reveal() {
+    if (shown) return;
+    shown = true;
+    frame.classList.add('on');
+    setTimeout(() => splash.remove(), 400);
+  }
+
   if (!/^https:\/\/script\.google\.com\/.+\/exec$/.test(APP_URL)) {
     document.body.insertAdjacentHTML('beforeend', '<p id="msg">⚠️ Colle l\'URL /exec de l\'appli dans APP_URL (index.html).</p>');
   } else {
+    // L'appli prévient quand ses données sont affichées → le D clignote jusque-là
+    window.addEventListener('message', e => { if (e.data === 'discipline:ready') reveal(); });
+    // Sécurités : si l'appli ne prévient pas (erreur Google…), on l'affiche quand même
+    frame.addEventListener('load', () => setTimeout(reveal, 8000));
+    setTimeout(reveal, 30000);
     const id = new URLSearchParams(location.search).get('id') || '';
-    const show = () => frame.classList.add('on');
-    frame.addEventListener('load', show);
-    setTimeout(show, 10000); // sécurité : on affiche quoi qu'il arrive après 10 s
     frame.src = APP_URL + (id ? '?id=' + encodeURIComponent(id) : '');
   }
 </script>

@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<title>DISCIPLINE</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-title" content="DISCIPLINE">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="theme-color" content="#FAFAF8">
+<meta name="robots" content="noindex, nofollow">
+
+<!-- ⬇️ 1/2 : remplace ID_DE_TON_ICONE par l'ID Drive de ton icône (2 fois) -->
+<link rel="apple-touch-icon" href="https://drive.google.com/uc?id=1izNqcM0ETpwZwAq6t67zObDshHHX6Sqr&export=download&format=png">
+<link rel="icon" type="image/png" href="https://drive.google.com/uc?id=1izNqcM0ETpwZwAq6t67zObDshHHX6Sqr&export=download&format=png">
+<!-- ⚠️ Pas de manifest : sinon l'iPhone pourrait oublier le ?id= du client -->
+
+<style>
+  html, body { margin: 0; height: 100%; background: #FAFAF8; overflow: hidden; }
+  #splash { position: fixed; inset: 0; display: flex; align-items: center; justify-content: center; }
+  #splash svg { width: 92px; height: auto; animation: pulse 1.4s ease-in-out infinite; }
+  @keyframes pulse { 50% { opacity: .4; } }
+  #app { position: fixed; left: 0; right: 0; top: env(safe-area-inset-top); bottom: env(safe-area-inset-bottom); }
+  #app iframe { display: block; width: 100%; height: 100%; border: 0; opacity: 0; transition: opacity .3s; }
+  #app iframe.on { opacity: 1; }
+  #msg { position: fixed; inset: auto 24px 40% 24px; text-align: center; font: 15px/1.4 -apple-system, sans-serif; color: #14101F; }
+</style>
+</head>
+<body>
+  <div id="splash" aria-hidden="true">
+    <svg viewBox="0 0 345 278" xmlns="http://www.w3.org/2000/svg">
+      <g fill="#14101F">
+        <path d="M84.46 19.20L122.20 19.20C129.22 19.20 134.38 25.80 132.68 32.61L78.22 251.01C77.02 255.82 72.70 259.20 67.74 259.20L30.00 259.20C22.98 259.20 17.83 252.60 19.53 245.79L73.98 27.39C75.18 22.58 79.50 19.20 84.46 19.20Z"/>
+        <path d="M161.26 19.20L186.42 19.20C263.22 19.20 295.65 62.40 276.50 139.20C257.35 216.00 203.38 259.20 126.58 259.20L106.80 259.20C99.78 259.20 94.63 252.60 96.33 245.79L103.51 216.99C104.71 212.18 109.03 208.80 113.99 208.80L139.15 208.80C175.15 208.80 206.09 180.96 216.50 139.20C226.91 97.44 209.85 69.60 173.85 69.60L154.08 69.60C147.05 69.60 141.90 63.00 143.60 56.19L150.78 27.39C151.98 22.58 156.30 19.20 161.26 19.20Z"/>
+      </g>
+      <circle cx="293.18" cy="226.80" r="32.40" fill="#C3B1FF"/>
+    </svg>
+  </div>
+  <div id="app"><iframe id="frame" title="DISCIPLINE"></iframe></div>
+
+<script>
+  // ⬇️ 2/2 : colle l'URL de ton appli (Déployer › Gérer les déploiements), celle qui se termine par /exec
+  const APP_URL = 'https://script.google.com/macros/s/AKfycbxFGUHcynZ36yEAZQ0z4AAqPUhSk5HnltCwYOIVW_0CWoc2SDQP8tAC9jqGCXQqoJKjVw/exec';
+
+  const frame = document.getElementById('frame');
+  if (!/^https:\/\/script\.google\.com\/.+\/exec$/.test(APP_URL)) {
+    document.body.insertAdjacentHTML('beforeend', '<p id="msg">⚠️ Colle l\'URL /exec de l\'appli dans APP_URL (index.html).</p>');
+  } else {
+    const id = new URLSearchParams(location.search).get('id') || '';
+    const show = () => frame.classList.add('on');
+    frame.addEventListener('load', show);
+    setTimeout(show, 10000); // sécurité : on affiche quoi qu'il arrive après 10 s
+    frame.src = APP_URL + (id ? '?id=' + encodeURIComponent(id) : '');
+  }
+</script>
+</body>
+</html>

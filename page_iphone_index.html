@@ -1,0 +1,120 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<title>DISCIPLINE</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-title" content="DISCIPLINE">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="theme-color" content="#E9EBF5">
+<script>
+  // Thème clair / sombre : le même que dans l'appli (mémorisé ici quand tu changes dans l'appli)
+  (function () {
+    var t = null;
+    try { t = localStorage.getItem('disc_theme'); } catch (e) {}
+    if (t !== 'dark' && t !== 'light') t = window.matchMedia && matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+    document.documentElement.setAttribute('data-theme', t);
+    document.querySelector('meta[name=theme-color]').setAttribute('content', t === 'dark' ? '#06050B' : '#E9EBF5');
+  })();
+</script>
+<meta name="robots" content="noindex, nofollow">
+
+<!-- Icône : apple-touch-icon.png à côté de index.html. Quand tu changes l'image, passe ?v=2 à ?v=3, etc. -->
+<link rel="apple-touch-icon" href="apple-touch-icon.png?v=2">
+<link rel="icon" type="image/png" href="apple-touch-icon.png?v=2">
+<!-- ⚠️ Pas de manifest : sinon l'iPhone pourrait oublier le ?id= du client -->
+
+<style>
+  /* Exactement la couleur de fond de l'appli → aucune bande visible en haut ni en bas, sur tous les iPhone et iPad */
+  :root { --bg: #E9EBF5; --bar: #E9EBF5; --ink: #14101F;
+    --mesh: radial-gradient(55% 40% at 0% 0%, rgba(134,182,255,.75), transparent 70%),
+            radial-gradient(50% 36% at 100% 8%, rgba(255,170,210,.70), transparent 70%),
+            radial-gradient(48% 34% at 100% 52%, rgba(178,156,255,.60), transparent 72%),
+            radial-gradient(50% 36% at 0% 62%, rgba(140,236,200,.55), transparent 72%),
+            radial-gradient(60% 40% at 82% 100%, rgba(255,196,150,.65), transparent 70%),
+            radial-gradient(55% 38% at 15% 100%, rgba(160,150,255,.50), transparent 70%),
+            linear-gradient(180deg, #F4F5FB, #E9EBF5);
+    --streaks: linear-gradient(118deg, transparent 0 24%, rgba(255,255,255,.55) 30%, transparent 37%),
+               linear-gradient(118deg, transparent 0 58%, rgba(255,255,255,.35) 63%, transparent 69%); }
+  [data-theme=dark] { --bg: #06050B; --bar: #06050B; --ink: #F4F2F9;
+    --mesh: radial-gradient(55% 40% at 0% 0%, rgba(70,90,255,.50), transparent 70%),
+            radial-gradient(50% 36% at 100% 6%, rgba(220,70,170,.36), transparent 70%),
+            radial-gradient(46% 32% at 100% 54%, rgba(130,90,255,.32), transparent 72%),
+            radial-gradient(48% 34% at 0% 64%, rgba(20,190,160,.22), transparent 72%),
+            radial-gradient(60% 40% at 84% 100%, rgba(255,120,70,.24), transparent 70%),
+            radial-gradient(55% 38% at 14% 100%, rgba(110,80,240,.34), transparent 70%),
+            linear-gradient(180deg, #0D0B18, #06050B);
+    --streaks: linear-gradient(118deg, transparent 0 24%, rgba(255,255,255,.07) 30%, transparent 37%),
+               linear-gradient(118deg, transparent 0 58%, rgba(255,255,255,.05) 63%, transparent 69%); }
+  html, body { margin: 0; width: 100%; height: 100%; min-height: 100vh; min-height: -webkit-fill-available; background: var(--bg); overflow: hidden; transition: background .3s; }
+  /* Écran de chargement : reflets de couleur sur tout l'écran (barre d'état comprise), puis fondu vers l'appli */
+  #fx { position: fixed; inset: 0; background: var(--streaks), var(--mesh); transition: opacity .45s; pointer-events: none; }
+  body.on #fx { opacity: 0; }
+  /* Bande sous la barre d'onglets (zone de la barre d'accueil de l'iPhone) : même couleur que le fond */
+  #safe-b { position: fixed; left: 0; right: 0; bottom: 0; height: env(safe-area-inset-bottom); background: var(--bar); opacity: 0; transition: opacity .3s, background .3s; }
+  body.on #safe-b { opacity: 1; }
+  /* Le logo et l'appli occupent exactement la même zone → le D ne bouge pas au moment du passage */
+  #splash, #app { position: fixed; left: 0; right: 0; top: env(safe-area-inset-top); bottom: env(safe-area-inset-bottom); }
+  #splash { display: flex; align-items: center; justify-content: center; }
+  #splash svg { color: var(--ink); width: 92px; height: auto; animation: pulse 1.4s ease-in-out infinite; filter: drop-shadow(0 10px 24px rgba(107,92,246,.25)); }
+  @keyframes pulse { 50% { opacity: .4; } }
+  #app iframe { display: block; width: 100%; height: 100%; border: 0; opacity: 0; pointer-events: none; transition: opacity .3s; }
+  #app iframe.on { opacity: 1; pointer-events: auto; }
+  #msg { position: fixed; inset: auto 24px 40% 24px; text-align: center; font: 15px/1.4 -apple-system, sans-serif; color: var(--ink); }
+</style>
+</head>
+<body>
+  <div id="fx"></div>
+  <div id="splash" aria-label="Chargement">
+    <svg viewBox="0 0 345 278" xmlns="http://www.w3.org/2000/svg">
+      <g fill="currentColor">
+        <path d="M84.46 19.20L122.20 19.20C129.22 19.20 134.38 25.80 132.68 32.61L78.22 251.01C77.02 255.82 72.70 259.20 67.74 259.20L30.00 259.20C22.98 259.20 17.83 252.60 19.53 245.79L73.98 27.39C75.18 22.58 79.50 19.20 84.46 19.20Z"/>
+        <path d="M161.26 19.20L186.42 19.20C263.22 19.20 295.65 62.40 276.50 139.20C257.35 216.00 203.38 259.20 126.58 259.20L106.80 259.20C99.78 259.20 94.63 252.60 96.33 245.79L103.51 216.99C104.71 212.18 109.03 208.80 113.99 208.80L139.15 208.80C175.15 208.80 206.09 180.96 216.50 139.20C226.91 97.44 209.85 69.60 173.85 69.60L154.08 69.60C147.05 69.60 141.90 63.00 143.60 56.19L150.78 27.39C151.98 22.58 156.30 19.20 161.26 19.20Z"/>
+      </g>
+      <defs><linearGradient id="dot" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#5F6BFF"/><stop offset=".5" stop-color="#8E5CF6"/><stop offset="1" stop-color="#E264C4"/></linearGradient></defs>
+      <circle cx="293.18" cy="226.80" r="32.40" fill="url(#dot)"/>
+    </svg>
+  </div>
+  <div id="app"><iframe id="frame" title="DISCIPLINE"></iframe></div>
+  <div id="safe-b"></div>
+
+<script>
+  // URL de ton appli (Déployer › Gérer les déploiements), celle qui se termine par /exec
+  const APP_URL = 'https://script.google.com/macros/s/AKfycbxFGUHcynZ36yEAZQ0z4AAqPUhSk5HnltCwYOIVW_0CWoc2SDQP8tAC9jqGCXQqoJKjVw/exec';
+
+  const frame = document.getElementById('frame');
+  const splash = document.getElementById('splash');
+  let shown = false;
+  function reveal() {
+    if (shown) return;
+    shown = true;
+    frame.classList.add('on');
+    document.body.classList.add('on');
+    setTimeout(() => { splash.remove(); const fx = document.getElementById('fx'); if (fx) fx.remove(); }, 500);
+  }
+
+  if (!/^https:\/\/script\.google\.com\/.+\/exec$/.test(APP_URL)) {
+    document.body.insertAdjacentHTML('beforeend', '<p id="msg">⚠️ Colle l\'URL /exec de l\'appli dans APP_URL (index.html).</p>');
+  } else {
+    // L'appli prévient quand ses données sont affichées → le D clignote jusque-là
+    window.addEventListener('message', e => {
+      if (e.data === 'discipline:ready') reveal();
+      // L'appli change de thème → la page suit (fond, barre du bas, couleur de la barre d'état)
+      const m = typeof e.data === 'string' && /^discipline:theme:(dark|light)$/.exec(e.data);
+      if (m) {
+        document.documentElement.setAttribute('data-theme', m[1]);
+        document.querySelector('meta[name=theme-color]').setAttribute('content', m[1] === 'dark' ? '#06050B' : '#E9EBF5');
+        try { localStorage.setItem('disc_theme', m[1]); } catch (err) {}
+      }
+    });
+    // Sécurités : si l'appli ne prévient pas (erreur Google…), on l'affiche quand même
+    frame.addEventListener('load', () => setTimeout(reveal, 8000));
+    setTimeout(reveal, 30000);
+    const id = new URLSearchParams(location.search).get('id') || '';
+    frame.src = APP_URL + (id ? '?id=' + encodeURIComponent(id) : '');
+  }
+</script>
+</body>
+</html>

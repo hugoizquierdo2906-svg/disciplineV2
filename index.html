@@ -52,11 +52,11 @@
   /* Écran de chargement : reflets de couleur sur tout l'écran (barre d'état comprise), puis fondu vers l'appli */
   #fx { position: fixed; inset: 0; background: var(--streaks), var(--mesh); transition: opacity .45s; pointer-events: none; }
   body.on #fx { opacity: 0; }
-  /* Bande sous la barre d'onglets (zone de la barre d'accueil de l'iPhone) : même couleur que le fond */
-  #safe-b { position: fixed; left: 0; right: 0; bottom: 0; height: env(safe-area-inset-bottom); background: var(--bar); opacity: 0; transition: opacity .3s, background .3s; }
-  body.on #safe-b { opacity: 1; }
-  /* Le logo et l'appli occupent exactement la même zone → le D ne bouge pas au moment du passage */
-  #splash, #app { position: fixed; left: 0; right: 0; top: env(safe-area-inset-top); bottom: env(safe-area-inset-bottom); }
+  /* v4.4 : l'appli descend jusqu'en bas de l'écran (plus de bande en bas) ;
+     la page lui donne la hauteur de la barre d'accueil pour placer la barre d'onglets */
+  #splash { position: fixed; left: 0; right: 0; top: env(safe-area-inset-top); bottom: env(safe-area-inset-bottom); }
+  #app { position: fixed; left: 0; right: 0; top: env(safe-area-inset-top); bottom: 0; }
+  #sab { position: fixed; left: 0; bottom: 0; width: 1px; height: env(safe-area-inset-bottom, 0px); visibility: hidden; pointer-events: none; }
   #splash { display: flex; align-items: center; justify-content: center; }
   #splash svg { color: var(--ink); width: 92px; height: auto; animation: pulse 1.4s ease-in-out infinite; filter: drop-shadow(0 10px 24px rgba(107,92,246,.25)); }
   @keyframes pulse { 50% { opacity: .4; } }
@@ -78,7 +78,7 @@
     </svg>
   </div>
   <div id="app"><iframe id="frame" title="DISCIPLINE"></iframe></div>
-  <div id="safe-b"></div>
+  <div id="sab"></div>
 
 <script>
   // URL de ton appli (Déployer › Gérer les déploiements), celle qui se termine par /exec
@@ -87,8 +87,22 @@
   const frame = document.getElementById('frame');
   const splash = document.getElementById('splash');
   let shown = false;
+  // v4.4 : la page envoie à l'appli le thème mémorisé ici (fiable) + la hauteur de la barre d'accueil.
+  // L'appli Google est dans des cadres imbriqués : on envoie le message à tous.
+  function env() {
+    const sab = document.getElementById('sab');
+    return 'discipline:env:' + JSON.stringify({ theme: document.documentElement.getAttribute('data-theme'), sab: sab ? sab.offsetHeight : 0 });
+  }
+  function bcast(w, msg, depth) {
+    try { w.postMessage(msg, '*'); } catch (e) {}
+    if (depth > 4) return;
+    try { for (let i = 0; i < w.length; i++) bcast(w[i], msg, depth + 1); } catch (e) {}
+  }
+  function sendEnv() { if (frame.contentWindow) bcast(frame.contentWindow, env(), 0); }
+  let envTimer = null;
   function reveal() {
     if (shown) return;
+    sendEnv();
     shown = true;
     frame.classList.add('on');
     document.body.classList.add('on');
@@ -100,7 +114,7 @@
   } else {
     // L'appli prévient quand ses données sont affichées → le D clignote jusque-là
     window.addEventListener('message', e => {
-      if (e.data === 'discipline:ready') reveal();
+      if (e.data === 'discipline:ready') { sendEnv(); setTimeout(reveal, 80); setTimeout(() => clearInterval(envTimer), 3000); }
       // L'appli change de thème → la page suit (fond, barre du bas, couleur de la barre d'état)
       const m = typeof e.data === 'string' && /^discipline:theme:(dark|light)$/.exec(e.data);
       if (m) {
@@ -110,7 +124,11 @@
       }
     });
     // Sécurités : si l'appli ne prévient pas (erreur Google…), on l'affiche quand même
-    frame.addEventListener('load', () => setTimeout(reveal, 8000));
+    frame.addEventListener('load', () => { sendEnv(); setTimeout(reveal, 8000); });
+    // tant que l'appli charge, on lui redonne le thème régulièrement (elle peut être prête à tout moment)
+    envTimer = setInterval(sendEnv, 300);
+    window.addEventListener('resize', () => setTimeout(sendEnv, 200));
+    window.addEventListener('pageshow', () => setTimeout(sendEnv, 200));
     setTimeout(reveal, 30000);
     const id = new URLSearchParams(location.search).get('id') || '';
     frame.src = APP_URL + (id ? '?id=' + encodeURIComponent(id) : '');

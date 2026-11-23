@@ -122,6 +122,13 @@
         document.querySelector('meta[name=theme-color]').setAttribute('content', m[1] === 'dark' ? '#06050B' : '#E9EBF5');
         try { localStorage.setItem('disc_theme', m[1]); } catch (err) {}
       }
+      // v6.0 : connexion → la page retient le compte sur ce téléphone ; déconnexion → elle l'oublie
+      const lg = typeof e.data === 'string' && /^discipline:login:([\w-]{20,})$/.exec(e.data);
+      if (lg) { try { localStorage.setItem('disc_id', lg[1]); } catch (err) {} }
+      if (e.data === 'discipline:logout') {
+        try { localStorage.removeItem('disc_id'); } catch (err) {}
+        if (location.search) history.replaceState(null, '', location.pathname);   // ancien lien ?id=… retiré de l'adresse
+      }
     });
     // Sécurités : si l'appli ne prévient pas (erreur Google…), on l'affiche quand même
     frame.addEventListener('load', () => { sendEnv(); setTimeout(reveal, 8000); });
@@ -130,7 +137,9 @@
     window.addEventListener('resize', () => setTimeout(sendEnv, 200));
     window.addEventListener('pageshow', () => setTimeout(sendEnv, 200));
     setTimeout(reveal, 30000);
-    const id = new URLSearchParams(location.search).get('id') || '';
+    // v6.0 : lien personnel (?id=…) OU compte retenu sur ce téléphone ; sinon l'appli affiche l'écran de connexion
+    let id = new URLSearchParams(location.search).get('id') || '';
+    try { if (id) localStorage.setItem('disc_id', id); else id = localStorage.getItem('disc_id') || ''; } catch (e) {}
     frame.src = APP_URL + (id ? '?id=' + encodeURIComponent(id) : '');
   }
 </script>

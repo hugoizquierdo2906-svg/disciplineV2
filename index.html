@@ -20,6 +20,10 @@
   })();
 </script>
 <meta name="robots" content="noindex, nofollow">
+<!-- v6.8 : on prépare la connexion à Google pendant que la page s'affiche -->
+<link rel="preconnect" href="https://script.google.com">
+<link rel="preconnect" href="https://script.googleusercontent.com">
+<link rel="dns-prefetch" href="https://n-script.googleusercontent.com">
 
 <!-- Icône : apple-touch-icon.png à côté de index.html. Quand tu changes l'image, passe ?v=2 à ?v=3, etc. -->
 <link rel="apple-touch-icon" href="apple-touch-icon.png?v=2">
@@ -98,7 +102,10 @@
     if (depth > 4) return;
     try { for (let i = 0; i < w.length; i++) bcast(w[i], msg, depth + 1); } catch (e) {}
   }
-  function sendEnv() { if (frame.contentWindow) bcast(frame.contentWindow, env(), 0); }
+  // v6.8 : copie des données du membre, gardée ICI (l'iPhone vide souvent le stockage de l'appli Google)
+  // → renvoyée à l'appli à l'ouverture : elle s'affiche tout de suite, puis se met à jour toute seule.
+  let cacheMsg = '';
+  function sendEnv() { if (frame.contentWindow) { bcast(frame.contentWindow, env(), 0); if (cacheMsg) bcast(frame.contentWindow, cacheMsg, 0); } }
   let envTimer = null;
   function reveal() {
     if (shown) return;
@@ -114,7 +121,11 @@
   } else {
     // L'appli prévient quand ses données sont affichées → le D clignote jusque-là
     window.addEventListener('message', e => {
-      if (e.data === 'discipline:ready') { sendEnv(); setTimeout(reveal, 80); setTimeout(() => clearInterval(envTimer), 3000); }
+      if (e.data === 'discipline:ready') { sendEnv(); setTimeout(reveal, 80); setTimeout(() => { clearInterval(envTimer); cacheMsg = ''; }, 3000); }
+      // v6.8 : l'appli envoie sa copie à jour → on la garde pour la prochaine ouverture
+      if (typeof e.data === 'string' && e.data.indexOf('discipline:cache:') === 0 && /\.googleusercontent\.com$/.test(e.origin)) {
+        try { localStorage.setItem('disc_cache', e.data.slice(17)); } catch (err) {}
+      }
       // L'appli change de thème → la page suit (fond, barre du bas, couleur de la barre d'état)
       const m = typeof e.data === 'string' && /^discipline:theme:(dark|light)$/.exec(e.data);
       if (m) {
@@ -126,7 +137,7 @@
       const lg = typeof e.data === 'string' && /^discipline:login:([\w-]{20,})$/.exec(e.data);
       if (lg) { try { localStorage.setItem('disc_id', lg[1]); } catch (err) {} }
       if (e.data === 'discipline:logout') {
-        try { localStorage.removeItem('disc_id'); } catch (err) {}
+        try { localStorage.removeItem('disc_id'); localStorage.removeItem('disc_cache'); } catch (err) {}
         if (location.search) history.replaceState(null, '', location.pathname);   // ancien lien ?id=… retiré de l'adresse
       }
     });
@@ -140,6 +151,8 @@
     // v6.0 : lien personnel (?id=…) OU compte retenu sur ce téléphone ; sinon l'appli affiche l'écran de connexion
     let id = new URLSearchParams(location.search).get('id') || '';
     try { if (id) localStorage.setItem('disc_id', id); else id = localStorage.getItem('disc_id') || ''; } catch (e) {}
+    // v6.8 : copie des données de CE compte (sinon rien)
+    try { const c = localStorage.getItem('disc_cache'); if (c && id && JSON.parse(c).id === id) cacheMsg = 'discipline:cache:' + c; } catch (e) {}
     frame.src = APP_URL + (id ? '?id=' + encodeURIComponent(id) : '');
   }
 </script>
